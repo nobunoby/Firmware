@@ -43,9 +43,8 @@
 #include <lib/ecl/geo/geo.h>
 #include <mathlib/mathlib.h>
 
-float ECL_YawController::control_attitude(const struct ECL_ControlData &ctl_data)
+float ECL_YawController::control_attitude(const float dt, const ECL_ControlData &ctl_data)
 {
-
 	/* Do not calculate control signal with bad inputs */
 	if (!(PX4_ISFINITE(ctl_data.roll) &&
 	      PX4_ISFINITE(ctl_data.pitch) &&
@@ -95,7 +94,7 @@ float ECL_YawController::control_attitude(const struct ECL_ControlData &ctl_data
 	return _rate_setpoint;
 }
 
-float ECL_YawController::control_bodyrate(const struct ECL_ControlData &ctl_data)
+float ECL_YawController::control_bodyrate(const float dt, const ECL_ControlData &ctl_data)
 {
 	/* Do not calculate control signal with bad inputs */
 	if (!(PX4_ISFINITE(ctl_data.roll) &&
@@ -110,15 +109,10 @@ float ECL_YawController::control_bodyrate(const struct ECL_ControlData &ctl_data
 		return math::constrain(_last_output, -1.0f, 1.0f);
 	}
 
-	/* get the usual dt estimate */
-	uint64_t dt_micros = hrt_elapsed_time(&_last_run);
-	_last_run = hrt_absolute_time();
-	float dt = (float)dt_micros * 1e-6f;
-
 	/* lock integral for long intervals */
 	bool lock_integrator = ctl_data.lock_integrator;
 
-	if (dt_micros > 500000) {
+	if (dt > 0.5f) {
 		lock_integrator = true;
 	}
 
@@ -155,7 +149,7 @@ float ECL_YawController::control_bodyrate(const struct ECL_ControlData &ctl_data
 	return math::constrain(_last_output, -1.0f, 1.0f);
 }
 
-float ECL_YawController::control_euler_rate(const struct ECL_ControlData &ctl_data)
+float ECL_YawController::control_euler_rate(const float dt, const ECL_ControlData &ctl_data)
 {
 	/* Transform setpoint to body angular rates (jacobian) */
 	_bodyrate_setpoint = -sinf(ctl_data.roll) * ctl_data.pitch_rate_setpoint +
@@ -163,5 +157,5 @@ float ECL_YawController::control_euler_rate(const struct ECL_ControlData &ctl_da
 
 	set_bodyrate_setpoint(_bodyrate_setpoint);
 
-	return control_bodyrate(ctl_data);
+	return control_bodyrate(dt, ctl_data);
 }

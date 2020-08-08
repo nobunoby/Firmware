@@ -46,7 +46,7 @@
 
 using matrix::wrap_pi;
 
-float ECL_WheelController::control_bodyrate(const struct ECL_ControlData &ctl_data)
+float ECL_WheelController::control_bodyrate(const float dt, const ECL_ControlData &ctl_data)
 {
 	/* Do not calculate control signal with bad inputs */
 	if (!(PX4_ISFINITE(ctl_data.body_z_rate) &&
@@ -56,15 +56,10 @@ float ECL_WheelController::control_bodyrate(const struct ECL_ControlData &ctl_da
 		return math::constrain(_last_output, -1.0f, 1.0f);
 	}
 
-	/* get the usual dt estimate */
-	uint64_t dt_micros = hrt_elapsed_time(&_last_run);
-	_last_run = hrt_absolute_time();
-	float dt = (float)dt_micros * 1e-6f;
-
 	/* lock integral for long intervals */
 	bool lock_integrator = ctl_data.lock_integrator;
 
-	if (dt_micros > 500000) {
+	if (dt > 0.5f) {
 		lock_integrator = true;
 	}
 
@@ -101,7 +96,7 @@ float ECL_WheelController::control_bodyrate(const struct ECL_ControlData &ctl_da
 	return math::constrain(_last_output, -1.0f, 1.0f);
 }
 
-float ECL_WheelController::control_attitude(const struct ECL_ControlData &ctl_data)
+float ECL_WheelController::control_attitude(const float dt, const ECL_ControlData &ctl_data)
 {
 	/* Do not calculate control signal with bad inputs */
 	if (!(PX4_ISFINITE(ctl_data.yaw_setpoint) &&
