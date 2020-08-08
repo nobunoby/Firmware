@@ -287,7 +287,7 @@ MulticopterAttitudeControl::Run()
 			_attitude_control.adaptAttitudeSetpoint(delta_q_reset);
 		}
 
-		const hrt_abstime now = hrt_absolute_time();
+		const hrt_abstime now = _v_att.timestamp;
 
 		// Guard against too small (< 0.2ms) and too large (> 20ms) dt's.
 		const float dt = math::constrain(((now - _last_run) / 1e6f), 0.0002f, 0.02f);
