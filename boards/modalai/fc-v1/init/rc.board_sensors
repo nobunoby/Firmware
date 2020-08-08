@@ -4,6 +4,7 @@
 #------------------------------------------------------------------------------
 
 adc start
+system_power start
 
 # Start Digital power monitors
 voxlpm -X -b 3 -T VBATT start
